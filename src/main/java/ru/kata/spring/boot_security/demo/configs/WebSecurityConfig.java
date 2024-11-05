@@ -10,40 +10,54 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+/**
+ * Класс конфигурации безопасности WebSecurityConfig для настройки Spring Security.
+ *
+ * Этот класс задает правила доступа к ресурсам, настройки аутентификации,
+ * обработку успешной аутентификации и создает пользователей в памяти.
+ *
+ * Конфигурация активирует форму входа и настраивает ее с SuccessUserHandler
+ * для определения страницы перенаправления.
+ */
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
     private final SuccessUserHandler successUserHandler;
 
+    // Внедрение SuccessUserHandler для управления перенаправлением после входа
     public WebSecurityConfig(SuccessUserHandler successUserHandler) {
         this.successUserHandler = successUserHandler;
     }
 
+    // Настройка правил доступа и параметров входа/выхода из системы
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests()
-                .antMatchers("/", "/index").permitAll()
-                .anyRequest().authenticated()
+                .authorizeRequests() // Настройка правил авторизации
+                .antMatchers("/", "/index").permitAll() // Доступ к / и /index для всех
+                .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 .and()
-                .formLogin().successHandler(successUserHandler)
-                .permitAll()
+                .formLogin() // Включение формы входа
+                .successHandler(successUserHandler) // Обработка успешного входа через SuccessUserHandler
+                .permitAll() // Разрешение на доступ к странице входа для всех
                 .and()
-                .logout()
-                .permitAll();
+                .logout() // Настройка выхода
+                .permitAll(); // Разрешение на доступ к странице выхода для всех
     }
 
-    // аутентификация inMemory
+    // Настройка пользователей в памяти для тестирования аутентификации
     @Bean
     @Override
     public UserDetailsService userDetailsService() {
-        UserDetails user =
-                User.withDefaultPasswordEncoder()
-                        .username("user")
-                        .password("user")
-                        .roles("USER")
-                        .build();
+        // Создание пользователя с ролью USER и паролем "user"
+        UserDetails user = User.withDefaultPasswordEncoder()
+                .username("user")
+                .password("user")
+                .roles("USER")
+                .build();
 
+        // Возвращаем UserDetailsService с созданным пользователем
         return new InMemoryUserDetailsManager(user);
     }
 }
