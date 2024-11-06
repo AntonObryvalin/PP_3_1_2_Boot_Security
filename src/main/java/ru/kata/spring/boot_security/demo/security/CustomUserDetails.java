@@ -27,26 +27,26 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getName(); // Вернуть имя пользователя
+        return user.getName();
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Учетная запись не истекла
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Учетная запись не заблокирована
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Учетные данные не истекли
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Учетная запись активна
+        return true;
     }
 }

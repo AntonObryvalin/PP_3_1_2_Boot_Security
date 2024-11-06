@@ -10,14 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
 
-/**
- * Компонент SuccessUserHandler для настройки поведения после успешной аутентификации.
- *
- * Этот класс обрабатывает перенаправление пользователя в зависимости от его роли.
- * Если у пользователя роль "ROLE_USER", он перенаправляется на "/user", в противном случае — на "/".
- *
- * Используется как successHandler при настройке formLogin в WebSecurityConfig.
- */
 @Component
 public class SuccessUserHandler implements AuthenticationSuccessHandler {
 

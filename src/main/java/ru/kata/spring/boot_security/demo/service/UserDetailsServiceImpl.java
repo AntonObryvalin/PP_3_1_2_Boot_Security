@@ -15,10 +15,10 @@ import java.util.Optional;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    // Репозиторий для доступа к данным пользователя
+
     private final UserRepository userRepository;
 
-    // Конструктор для внедрения зависимости UserRepository
+
     @Autowired
     public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;

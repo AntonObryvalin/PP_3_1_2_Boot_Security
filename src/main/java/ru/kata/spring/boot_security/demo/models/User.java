@@ -18,7 +18,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password", nullable = false) // Поле для хранения пароля
+    @Column(name = "password", nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER) // Используем EAGER, чтобы сразу загружать роли
@@ -32,10 +32,10 @@ public class User {
     public User() {
     }
 
-    public User(String name, String email, String password) { // Обновленный конструктор
+    public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
-        this.password = password; // Устанавливаем пароль
+        this.password = password;
     }
 
     // Геттеры и сеттеры
@@ -86,7 +86,7 @@ public class User {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' + // Для отладки пароля
+                ", password='" + password + '\'' +
                 ", roles=" + roles +
                 '}';
     }
