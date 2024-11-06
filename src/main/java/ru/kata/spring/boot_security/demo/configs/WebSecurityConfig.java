@@ -2,62 +2,69 @@ package ru.kata.spring.boot_security.demo.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.kata.spring.boot_security.demo.service.UserDetailsServiceImpl;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-/**
- * Класс конфигурации безопасности WebSecurityConfig для настройки Spring Security.
- *
- * Этот класс задает правила доступа к ресурсам, настройки аутентификации,
- * обработку успешной аутентификации и создает пользователей в памяти.
- *
- * Конфигурация активирует форму входа и настраивает ее с SuccessUserHandler
- * для определения страницы перенаправления.
- */
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final SuccessUserHandler successUserHandler;
+    private final UserDetailsServiceImpl userDetailsService;
 
-    // Внедрение SuccessUserHandler для управления перенаправлением после входа
-    public WebSecurityConfig(SuccessUserHandler successUserHandler) {
-        this.successUserHandler = successUserHandler;
+    // Внедрение UserDetailsService для работы с пользователями из базы данных
+    public WebSecurityConfig(UserDetailsServiceImpl userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 
-    // Настройка правил доступа и параметров входа/выхода из системы
+    // Настройка аутентификации с использованием UserDetailsService и PasswordEncoder
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+    }
+
+    // Настройка авторизации и доступа к URL
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests() // Настройка правил авторизации
-                .antMatchers("/", "/index").permitAll() // Доступ к / и /index для всех
+                .authorizeRequests()
+                .antMatchers("/admin/**").hasRole("ADMIN") // Доступ к /admin только для администраторов
+                .antMatchers("/user/**").hasAnyRole("USER", "ADMIN") // Доступ к /user для пользователей и администраторов
                 .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 .and()
-                .formLogin() // Включение формы входа
-                .successHandler(successUserHandler) // Обработка успешного входа через SuccessUserHandler
-                .permitAll() // Разрешение на доступ к странице входа для всех
+                .formLogin()
+                .loginPage("/login") // Укажите страницу входа
+                .successHandler(loginSuccessHandler()) // Настройка обработчика успешного входа
+                .permitAll() // Разрешить всем доступ к форме логина
                 .and()
-                .logout() // Настройка выхода
-                .permitAll(); // Разрешение на доступ к странице выхода для всех
+                .logout()
+                .permitAll(); // Разрешить всем доступ к логауту
     }
 
-    // Настройка пользователей в памяти для тестирования аутентификации
+    // Бин для кодирования паролей
     @Bean
-    @Override
-    public UserDetailsService userDetailsService() {
-        // Создание пользователя с ролью USER и паролем "user"
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("user")
-                .password("user")
-                .roles("USER")
-                .build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-        // Возвращаем UserDetailsService с созданным пользователем
-        return new InMemoryUserDetailsManager(user);
+    // Настройка обработчика успешного входа
+    @Bean
+    public AuthenticationSuccessHandler loginSuccessHandler() {
+        return (request, response, authentication) -> {
+            // Получаем роли пользователя
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+
+            if (isAdmin) {
+                response.sendRedirect("/admin"); // Направляем администратора на /admin
+            } else {
+                response.sendRedirect("/user"); // Направляем пользователя на /user
+            }
+        };
     }
 }
